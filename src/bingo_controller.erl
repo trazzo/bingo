@@ -96,7 +96,7 @@ game_over(_Event, State) ->
 
 %%% Handling sync events
 
-waiting_for_players({register, Player}, _From, State) ->
+waiting_for_players({register, Conn, PlayerId}, _From, State) ->
     % TODO Add the player to the bingo_registry
     % * get a new card from the bingo module
     % If MIN_PLAYERS has been reached:

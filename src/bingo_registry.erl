@@ -4,7 +4,7 @@
 
 %% API
 -export([start_link/0, add_observer/2, add_player/3, remove_player/1,
-         broadcast/1, send/2, get_player_card/1]).
+         broadcast/1, get_player_card/1]).
 
 %% gen_server callbacks
 -export([init/1,
@@ -31,8 +31,6 @@
 
 -spec start_link() -> {ok, #state{}}.
 start_link() ->
-    ets:new(?ETS, [named_table, {read_concurrency,true},
-                   {write_concurrency, true}, {keypos, 2}]),
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
 -spec add_observer(pid(), binary()) -> ok.
@@ -52,23 +50,21 @@ add_player(Conn, DisplayName, Card) ->
 
 -spec get_player_card(pid()) -> bingo:card().
 get_player_card(Conn) ->
-    % TODO Read the card from the ets
-    unimplemented.
+        [InfoPlayer] = ets:lookup(?ETS,Conn),
+        InfoPlayer#player.card.       
 
 -spec broadcast(iolist()) -> ok.
 broadcast(Message) ->
-    % TODO Send the message to every connection Pid in the ETS
-    unimplemented.
-
--spec send(pid(), iolist()) -> ok.
-send(Pid, Message) ->
-    Pid ! Message.
+    Pids = ets:select(?ETS,[{#player{connection='$1', _='_'}, [], ['$1']}]),
+    [Pid ! Message || Pid <- Pids]. 
 
 %%%===================================================================
 %%% gen_server callbacks
 %%%===================================================================
 
 init([]) ->
+    ets:new(?ETS, [named_table, public, set, {read_concurrency,true},
+    {write_concurrency, true}, {keypos, #player.connection}]),
     {ok, #state{}}.
 
 handle_call(_Request, _From, State) ->

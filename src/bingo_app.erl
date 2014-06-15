@@ -12,6 +12,7 @@
 %% ===================================================================
 -spec start() -> ok.
 start() ->
+    lists:foreach(fun (Dep) -> application:start(Dep) end, [crypto, ranch, cowlib, cowboy]),
     application:start(bingo).
 
 %% ===================================================================
@@ -21,12 +22,12 @@ start() ->
 start(_StartType, _StartArgs) ->
 	Dispatch = cowboy_router:compile([
 		{'_', [
-			{"/", cowboy_static, {priv_file, bingo, "index.html"}},
-			{"/bingo/:method", bingo_handler, []},
-			{"/static/[...]", cowboy_static, {priv_dir, bingo, "static"}}
+			{"/", cowboy_static, {file, "priv/index.html"}},
+			{"/static/[...]", cowboy_static, {dir, "priv/static/"}},
+			{"/bingo/:method", bingo_handler, []}
 		]}
 	]),
-	{ok, _} = cowboy:start_http(http, 100, [{port, 8080}],
+	{ok, _} = cowboy:start_http(http, 100, [{port, 8081}],
 		[{env, [{dispatch, Dispatch}]}]),
     bingo_sup:start_link().
 

@@ -5,7 +5,11 @@
   {registered, []},
   {applications, [
                   kernel,
-                  stdlib
+                  stdlib,
+                  crypto,
+                  ranch,
+                  cowlib,
+                  cowboy
                  ]},
   {mod, { bingo_app, []}},
   {env, []}

@@ -3,11 +3,15 @@
 -behaviour(cowboy_websocket_handler).
 
 %% API
--export([]).
+-export([init/3]).
+
+
 
 %% cowboy_http_websocket_handler
 -export([websocket_init/3, websocket_handle/3,
          websocket_info/3, websocket_terminate/3]).
+
+
 
 %%====================================================================
 %% cowboy_http_handler callbacks
@@ -21,22 +25,25 @@ init({tcp, http}, _Req, _Opts) ->
 %%====================================================================
 
 websocket_init(tcp, Req, _) ->
-    % TODO register the connection (self()) as a game observer in bingo_registry
-    Req2 = cowboy_req:compact(Req),
-    {ok, Req2, undefined, hibernate}.
+    {UA, Req2} = cowboy_req:header(<<"user-agent">>, Req, <<"unknown">>),
+    Req3 = cowboy_req:compact(Req2),
+    bingo_registry:add_observer(self(), UA),
+    {ok, Req3, undefined, hibernate}.
 
-websocket_handle({text, Msg}, Req, State) ->
-	{reply, {text, << "That's what she said! ", Msg/binary >>}, Req, State};
-websocket_handle(_Data, Req, State) ->
+websocket_handle({text, Json}, Req, State) ->
+    io:format("Received from client: ~p~n", [Json]),
+    Data = jiffy:decode(Json),
+    io:format("Received from client: ~p~n", [Data]),
 	{ok, Req, State}.
 
-websocket_info(_Info, Req, State) ->
-    {ok, Req, State}.
+websocket_info(Msg, Req, State) ->
+    Json = jiffy:encode(Msg),
+    {reply, {text, Json}, Req, State}.
 
 websocket_terminate(_Reason, _Req, _State) ->
-    % TODO handle the termination of the websocket connection and removing the
-    % PID from the bingo_registry
-    ok.
+    io:format("Terminating connection~n"),
+    bingo_registry:remove_player(self()) .
+
 
 %%====================================================================
 %% Internal Functions

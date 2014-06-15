@@ -33,7 +33,7 @@ docsclean:
 	rm -f doc/*.html doc/*.css doc/erlang.png doc/edoc-info doc/doc
 
 go:
-	erl -name bingo -pa deps/*/ebin -pa ebin/ -s bingo_app start ${EXTRA_ARGS}
+	erl -sname bingo -pa deps/*/ebin -pa ebin/ -s reloader start -s bingo_app start ${EXTRA_ARGS}
 
 dialyzer:
 	dialyzer -c ebin/ -Wunmatched_returns -Werror_handling -Wrace_conditions
