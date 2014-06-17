@@ -10,24 +10,57 @@
         sendToServer = function (data) { connection.send(JSON.stringify(data)); },
         greetFromServer = function (data) {
             document.getElementById("header").innerHTML = data;
-            console.log('Received greet:', data);
         },
         numberFromServer = function (data) {
             document.getElementById("number").innerHTML = data;
-            console.log('Received number:', data);
         },
         notificationFromServer = function (data) {
             document.getElementById("log").innerHTML = data;
-            /*console.log('Received notification:', data);*/
         },
         nameFromServer = function (data) {
             console.log('Received name:', data);
+        },      
+        cardToArray = function(data){
+           var  rows = [data.row1, data.row2, data.row3],
+                xRows = [];
+                for(i=0; i<=2; i++){
+                   xRows[i] = printX(rows[i]);
+                }
+                return xRows;  
         },
-        cardFromServer = function (data) {
-            document.getElementById("card").innerHTML = data;
-            console.log('Received card:', data);
+        cardFromServer = function(data){
+            var i,
+                j,
+                cardArray = cardToArray(data),
+                table = document.getElementById("cardTable"); 
+            for (i=0; i<=2; i++){
+                for(j=0; j<=8; j++){          
+                        table.rows[i].cells[j].innerHTML = cardArray[i][j];
+                }
+            }
+        },
+        printX = function(data){
+            var i,
+                newData = [];
+               for (i=0; i<=8; i++){
+                        if(data[i] === 0){
+                            newData[i] = "X";
+                        }else{
+                            newData[i] = data[i];
+                        }
+               } 
+               return(newData);   
+        },
+        bingoToServer = function(data){
+        
+        },
+        lineToServer = function(data){
+        
+        },
+        nameToServer = function(data){
         };
-    
+        
+        
     connection = new WebSocket(server + '/connect');
 
     // Log errors
@@ -40,24 +73,38 @@
         var message = JSON.parse(e.data);
         eval(message.type + 'FromServer').apply(this, [message.content]); 
     };
+ 
+    connection.send = function(e) {
+        var message = JSON.parse(e.data);   
+        eval(message.type + 'ToServer').apply(this, [message.content]);
+        
+    }   
     
     </script>
   </head>
   <body>
-    <div id="header">
-        <p>MENSAJE</p>
+    <div id="global">
+        <div id="header">
+            <p>MENSAJE</p>
+        </div>
+        <div id="right">
+            <div id="display"><p id="number"></p></div>
+            <button id="bingoButton" onclick="validateBingo()">BINGO</button>
+            <button id="lineButton" onclick="validateLine()">LINEA</button>
+            <div>
+                <input id="textbox" type="text" name="firstname" value=>>
+                <button id="regButton" onclick="regname()">APUNTARSE</button>
+            </div>
+        </div>        
+        <div id="left">
+            <div id="log">LOG</div>
+            <div id="card">
+                <table id="cardTable">  
+                    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr> 
+                    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr> 
+                    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>    
+                </table>
+            </div>
+        </div>   
     </div>
-    <div id="right">
-        <div id="display"><p id="number"></p></div>
-        <button id="bingoButton" onclick="function()">BINGO</button>
-        <button id="lineButton" onclick="function()">LINEA</button>
-        <input id="textbox" type="text" name="firstname">
-        <button id="regButton" onclick="function()">APUNTARSE</button>
-    </div>        
-    <div id="left">
-        <div id="log">LOG</div>
-        <div id="card">CARTON</div>
-     
-    </div>   
-  
   </body>

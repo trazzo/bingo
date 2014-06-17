@@ -24,3 +24,7 @@ send_card(Pid, Card) ->
     JsonCard = bingo:card2json(Card),
     Pid ! {[{type, <<"card">>}, {content, JsonCard}]}.
 
+%-spec receive_card(pid(), bingo:card()) -> ok.
+%receive_card(Pid, Card) ->
+%    Carderl = jiffy:decode(Card),
+    

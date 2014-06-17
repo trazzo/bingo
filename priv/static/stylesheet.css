@@ -1,3 +1,9 @@
+#global{
+    width:100%;
+    height:100%;
+    background-color:brown;
+}
+
 /*
 ------------------------------------------------------------
 HEADER
@@ -28,10 +34,11 @@ LEFT SCREEN SIDE
 #left{
     background-color:red;
     z-index:0;
-    width:80%;
+    width:78%;
     height:80%;
     float:left;
     margin:0px; 5px; 5px; 5px;
+
 }
 
 #log{
@@ -40,7 +47,7 @@ LEFT SCREEN SIDE
     width:18%;
     height:100%;
     float:left;
-    margin:0px; 5px; 5px; 5px;
+    margin:auto;
     border: 2px solid black;
 	border-radius: 5px;
 	display:inline;
@@ -48,15 +55,59 @@ LEFT SCREEN SIDE
 
 #card{
     background-color:blue;
-    z-index:1;
-    width:80%;
-    height:100%;
-    float:left;
-    margin:0px; 5px; 5px; 5px;
     border: 2px solid black;
 	border-radius: 5px;
 	display:inline;
+	float:left;
+	margin:auto;
+    width:80%;
+    height:100%;    
+    z-index:1;
 }
+
+#cardTable{
+    border-collapse: separate;
+    border-spacing: 2px 2px;
+    border.radius: 5px;
+    box-shadow:inset 0px 0px 19px 2px #1bb8d4;
+    background-color:#2067f5;
+	border:2px solid #0d2e91;
+	color:#ccd1e0;
+    display:inline;
+    float:left;
+    line-height:25%;
+	margin:auto;	
+    position:relative;
+    table-layout: fixed;
+    z-index:1;
+    width:100%;
+    height:100%; 
+}
+
+#cardTable td{
+    border: 2px solid blue;
+    border-radius: 5px;
+    box-shadow:inset 0px 0px 19px 2px #1bb8d4;
+    color:#ccd1e0;
+    font-family:Arial;
+	font-size:50px;
+	font-weight:bold;
+	font-style:normal;
+    padding: 2px;
+    text-indent:0px;
+    text-align: center;
+	text-decoration:none;
+	text-shadow:1px 0px 38px #289deb;
+}
+td:hover{
+    background-color:#083e9c;
+}
+
+td:active{
+    position:relative;
+	top:1px;
+}
+
 
 /*
 ------------------------------------------------------------
@@ -65,63 +116,61 @@ RIGHT SCREEN SIDE
 */
 
 #right{
-    background-color:black;
+    background-color:black;  
+    float:right;
+    margin:0px; 15px; 5px; 5px;
+    margin-right:18px;
     z-index:0;
     width:19%;
     height:80%;
-    float:right;
-    margin:0px; 15px; 5px; 5px;
 }
 
 #display{
-    z-index:1;
-    float:right;
     background-color:yellow;
-    position:relative;
-    width:90%;
-    height:33%;
-    margin: 5px; 15px; 5px; 5px;
     border: 2px solid black;
 	border-radius: 5px;
-	display:inline;
-	text-align:center;
-	font-size:40px;
+    display:inline;
+    float:right;
+    font-size:40px;
 	font-family:Arial;
+    margin: 5px; 15px; 5px; 5px;
+	text-align:center;
+	width:90%;
+    height:33%;
+    position:relative;
+	z-index:1;
 }
 	
 #display  p{
-    text-align:center;
-    float:center;
     color:blue;
+    float:center;
     font-size:60px;
     font-family:Arial;
+    text-align:center;
+    
 }
 
 #bingoButton{
-    z-index:1;
-    float:right;
-    background-color:yellow;
-    position:relative;
-    width:90%;
-    height:25%;
-    margin: 5px; 15px; 5px; 5px;
-    border: 2px solid black;
-	border-radius: 5px;
-	display:inline;
-	box-shadow:inset 0px 0px 19px 2px #1bb8d4;
+    border:2px solid #0d2e91;
+    box-shadow:inset 0px 0px 19px 2px #1bb8d4;
 	background-color:#2067f5;
 	border-radius:21px;
-	text-indent:0px;
-	border:2px solid #0d2e91;
 	color:#ccd1e0;
-	font-family:Arial;
+	display:inline;
+    float:right;
+    font-family:Arial;
 	font-size:40px;
 	font-weight:bold;
 	font-style:normal;
-	line-height:25%;
+    margin: 5px; 15px; 5px; 5px;
+	text-indent:0px;
 	text-decoration:none;
 	text-align:center;
 	text-shadow:1px 0px 38px #289deb;
+	position:relative;
+	width:90%;
+    height:25%;
+	z-index:1;
 }
 
 #bingoButton:hover {
@@ -134,36 +183,32 @@ RIGHT SCREEN SIDE
 }
 
 #bingoButton button{
-    text-align:center;
     font-size:30;
+    text-align:center;
     padding-top:55px;
 }
 
 #lineButton{
-    z-index:1;
-    float:right;
-    background-color:yellow;
-    position:relative;
-    width:90%;
-    height:25%;
-    margin: 5px; 15px; 5px; 5px;
-    border: 2px solid black;
-	border-radius: 5px;
-	display:inline;
-	box-shadow:inset 0px 0px 19px 2px #1bb8d4;
+    border:2px solid #0d2e91;
+    box-shadow:inset 0px 0px 19px 2px #1bb8d4;
 	background-color:#2067f5;
 	border-radius:21px;
-	text-indent:0px;
-	border:2px solid #0d2e91;
 	color:#ccd1e0;
-	font-family:Arial;
+	display:inline;
+    float:right;
+    font-family:Arial;
 	font-size:40px;
 	font-weight:bold;
 	font-style:normal;
-	line-height:25%;
+    margin: 5px; 15px; 5px; 5px;
+    text-indent:0px;	
 	text-decoration:none;
 	text-align:center;
 	text-shadow:1px 0px 38px #289deb;
+	position:relative;
+    width:90%;
+    height:25%;
+	z-index:1;
 }
 
 #lineButton:hover {
@@ -182,30 +227,26 @@ RIGHT SCREEN SIDE
 }
 
 #regButton{
-    z-index:1;
-    float:right;
-    background-color:yellow;
-    position:relative;
-    width:45%;
-    height:10.5%;
-    margin: 5px; 15px; 0px; 5px;
-    border: 2px solid black;
-	border-radius: 5px;
-	display:inline;
+	border:2px solid #0d2e91;
 	box-shadow:inset 0px 0px 19px 2px #1bb8d4;
 	background-color:#2067f5;
 	border-radius:21px;
-	text-indent:0px;
-	border:2px solid #0d2e91;
 	color:#ccd1e0;
+	display:inline;
+	float:right;
 	font-family:Arial;
 	font-size:20px;
 	font-weight:bold;
 	font-style:normal;
-	line-height:10.5%;
+	margin: 5px; 15px; 0px; 5px;
+    text-indent:0px;
 	text-decoration:none;
 	text-align:center;
 	text-shadow:1px 0px 38px #289deb;
+	position:relative;
+    width:45%;
+    height:10.5%;
+	z-index:1;
 }
 
 #regButton:hover {
@@ -227,13 +268,16 @@ RIGHT SCREEN SIDE
 
     width:40%;
     margin-top:30px;
-    margin-left:33px;
+    margin-left:25px;
     border-radius: 5px;
     border: 2px solid black;
     color:blue;
+    display:inline;
 	font-family:Arial;
 	font-size:20;
 	padding-left:5px;
+	float:left;
+	position:relative;
 }
 
 
