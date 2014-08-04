@@ -4,7 +4,7 @@
 
 %% API
 -export([start_link/0, add_observer/2, add_player/3, remove_player/1,
-         broadcast/1, get_player_card/1]).
+         broadcast/2, get_player_card/1, get_player_name/1]).
 
 %% gen_server callbacks
 -export([init/1,
@@ -43,20 +43,28 @@ add_observer(Conn, UA) ->
 remove_player(Conn) ->
     true = ets:delete(?ETS, Conn).
 
--spec add_player(pid(), binary(), bingo:card()) -> ok.
+-spec add_player(pid(), binary(), bingo:card()) -> non_neg_integer().
 add_player(Conn, DisplayName, Card) ->
     true = ets:update_element(
-            ?ETS, Conn, [{#player.card, Card}, {#player.name, DisplayName}]).
+            ?ETS, Conn, [{#player.card, Card}, {#player.name, DisplayName}]),
+    length(ets:select(?ETS, [{#player{card='$1', _='_'}, [{'/=', '$1', undefined}], [true]}])). %Result of number of true (true when is a player registered)
+
 
 -spec get_player_card(pid()) -> bingo:card().
 get_player_card(Conn) ->
         [InfoPlayer] = ets:lookup(?ETS,Conn),
         InfoPlayer#player.card.       
+        
+-spec get_player_name(pid()) -> binary().
+get_player_name(Conn) ->
+        [InfoPlayer] = ets:lookup(?ETS,Conn),
+        InfoPlayer#player.name.       
 
--spec broadcast(iolist()) -> ok.
-broadcast(Message) ->
+-spec broadcast(Type::atom(), Value::atom()) -> ok.
+broadcast(Type, Value) ->
     Pids = ets:select(?ETS,[{#player{connection='$1', _='_'}, [], ['$1']}]),
-    [Pid ! Message || Pid <- Pids]. 
+    [Pid ! {msg, {Type, Value}} || Pid <- Pids]. 
+
 
 %%%===================================================================
 %%% gen_server callbacks

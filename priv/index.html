@@ -11,16 +11,36 @@
         greetFromServer = function (data) {
             document.getElementById("header").innerHTML = data;
         },
-        numberFromServer = function (data) {
+        bnumberFromServer = function (data) {
             document.getElementById("number").innerHTML = data;
         },
         notificationFromServer = function (data) {
             document.getElementById("log").innerHTML = data;
         },
-        nameFromServer = function (data) {
-            console.log('Received name:', data);
-        },      
-        cardToArray = function(data){
+        
+        lineClaimResultFromServer = function (data) {
+        if  (data.content){
+            document.getElementById("header").innerHTML = '¡Enhorabuena! LÍNEA VÁLIDA';
+            }else{
+                document.getElementById("header").innerHTML = 'Linea inválida';
+            }            
+        }
+        
+        bingoClaimResultFromServer = function (data){
+        if  (data.content){
+            document.getElementById("header").innerHTML = '¡Enhorabuena! HAS GANADO LA PARTIDA';
+            }else{
+                document.getElementById("header").innerHTML = 'Bingo inválido';
+            }            
+        }
+        
+        
+        
+        
+        
+        
+        
+        cardToArray = function(data){ 
            var  rows = [data.row1, data.row2, data.row3],
                 xRows = [];
                 for(i=0; i<=2; i++){
@@ -51,13 +71,15 @@
                } 
                return(newData);   
         },
-        bingoToServer = function(data){
-        
+        claimBingo = function(){
+            connection.send(JSON.stringify({type: "bingoClaim"}));
         },
-        lineToServer = function(data){
-        
+        claimLine = function(){
+            connection.send(JSON.stringify({type: "lineClaim"})); //convertimos a JSON PARA ENVIAR A ERLANG
         },
-        nameToServer = function(data){
+        regName = function(){
+            var name = document.getElementById("textbox").value;
+            connection.send(JSON.stringify({type: "register", content: name}));
         };
         
         
@@ -73,13 +95,7 @@
         var message = JSON.parse(e.data);
         eval(message.type + 'FromServer').apply(this, [message.content]); 
     };
- 
-    connection.send = function(e) {
-        var message = JSON.parse(e.data);   
-        eval(message.type + 'ToServer').apply(this, [message.content]);
-        
-    }   
-    
+     
     </script>
   </head>
   <body>
@@ -89,11 +105,11 @@
         </div>
         <div id="right">
             <div id="display"><p id="number"></p></div>
-            <button id="bingoButton" onclick="validateBingo()">BINGO</button>
-            <button id="lineButton" onclick="validateLine()">LINEA</button>
+            <button id="bingoButton" onclick="claimBingo()">BINGO</button>
+            <button id="lineButton" onclick="claimLine()">LINEA</button>
             <div>
-                <input id="textbox" type="text" name="firstname" value=>>
-                <button id="regButton" onclick="regname()">APUNTARSE</button>
+                    <input id="textbox" type="text" value=></input>
+                    <button type="button" id="regButton" onclick="regName();">Apuntarse</button>
             </div>
         </div>        
         <div id="left">

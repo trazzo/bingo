@@ -23,7 +23,8 @@ generate_number(Limit, Generated) ->
     case lists:member(N, Generated) of
          true -> 
              generate_number(Limit,Generated);
-         false -> N
+         false -> 
+             N
     end.
 
 %% @doc Generates a random bingo card
@@ -58,9 +59,18 @@ validate_bingo(Generated, Card) ->
 %% @end
 get_config(Key) ->
     case application:get_env(bingo, Key) of
-        undefined -> undefined;
+        undefined -> default(Key);
         {ok, Value} -> Value
     end.
+    
+default(min_players) ->
+    2;
+default(countdown) ->
+    3;
+defaut(time_between_numbers) ->
+    5;
+default(game_over_duration) ->
+    20.
 
 -spec card2json(card()) -> iolist().
 card2json(Card) ->

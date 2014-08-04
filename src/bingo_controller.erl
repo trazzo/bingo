@@ -7,7 +7,6 @@
 
 %% gen_fsm callbacks
 -export([init/1,
-         waiting_for_players/2,
          waiting_for_players/3,
          countdown/2,
          countdown/3,
@@ -24,6 +23,7 @@
         generated::[bingo:bnumber()], %% The numbers generated within a game
         min_players::pos_integer(),
         countdown::pos_integer(), %% In seconds
+        time_between_numbers::pos_integer(), %In seconds
         game_over_duration::pos_integer(), %% Seconds between games
         line::boolean() %% Turns on a successful line claim
 }).
@@ -45,7 +45,8 @@ start_link() ->
     gen_fsm:start_link({local, ?MODULE}, ?MODULE, [], []).
 
 %% @doc Registers a new player in the bingo game
--spec register_player(connection(), player_id()) -> ok | wait_for_next_game.
+-spec register_player(connection(), player_id()) -> 
+    {ok, bingo:card()} | {error, wait_for_next_game}.
 %% @end
 register_player(Connection, PlayerId) ->
     gen_fsm:sync_send_event(?MODULE, {register, Connection, PlayerId}).
@@ -64,28 +65,26 @@ claim(Claim, Connection) ->
 init([]) ->
     MinPlayers = bingo:get_config(min_players),
     Countdown = bingo:get_config(countdown),
+    TimeBetweenNumbers = bingo:get_config(time_between_numbers),
+    GameOverDuration = bingo:get_config (game_over_duration),
     {ok, waiting_for_players,
-     #state{min_players=MinPlayers, countdown=Countdown, line=false,
+     #state{min_players=MinPlayers, countdown=Countdown, time_between_numbers = TimeBetweenNumbers, game_over_duration = GameOverDuration, line=false,
             generated=[]}}.
 
 %%% Handling async events
 
-waiting_for_players(_Event, State) ->
-    {next_state, state_name, State}.
 
-countdown(tick, State) ->
-    % TODO update the countdown in every connection
-    % timer:send_after the next tick
-    {next_state, countdown, State};
-countdown(timeout, State) ->
-    % TODO Broadcast the transition to playing
+countdown(start_countdown, #state{countdown=Secs}=State) ->
+    countdown(Secs),
+    gen_fsm:send_event(?MODULE, generate_number),
     {next_state, playing, State}.
 
-playing(generate_number, State) ->
-    % TODO get a new random_number from the bingo module
-    % * broadcast the random number to all connected players
-    % timer:send_after the next generate_number
-    {next_state, playing, State};
+playing(generate_number, #state{generated = Generated, time_between_numbers = TimeBetweenNumbers}=State) ->
+    Bnumber = bingo:generate_number(99, []),
+    NewState = State#state{generated=[Bnumber|Generated]},
+    bingo_registry:broadcast(bnumber, Bnumber),
+    timer:apply_after(TimebetweenNumbers * 1000, gen_fsm, send_event, [?MODULE, generate_number]),           
+    {next_state, playing, NewState};   
 playing(_Event, State) ->
     {next_state, playing, State}.
 
@@ -96,30 +95,52 @@ game_over(_Event, State) ->
 
 %%% Handling sync events
 
-waiting_for_players({register, Conn, PlayerId}, _From, State) ->
-    % TODO Add the player to the bingo_registry
-    % * get a new card from the bingo module
-    % If MIN_PLAYERS has been reached:
-    % * send an async tick event
-    % * transition to countdown using a timeout
-    {reply, new_card, waiting_for_players, State}.
+waiting_for_players({register, Conn, PlayerId}, _From, #state{min_players=Min}=State) ->
+    Card = bingo:generate_card(),
+    case bingo_registry:add_player(Conn, PlayerId, Card) >= Min of
+        true ->
+            gen_fsm:send_event(?MODULE, start_countdown),
+            {reply, {ok, Card}, countdown, State};
+        false ->
+            {reply, {ok, Card}, waiting_for_players, State}
+    end.
 
 countdown({register, Conn, PlayerId}, _From, State) ->
-    % TODO Add the player to the bingo_registry
-    {reply, new_card, countdown, State}.
+    Card = bingo:generate_card(),
+    bingo_registry:add_player(Conn, PlayerId, Card),
+    {reply, {ok, Card}, countdown, State}.
 
-playing({line, Player}, _From, State) ->
-    % TODO check whether a line has been claimed before
-    % * Get the card for that player and the list of generated numbers
-    % * Use the bingo module to validate the claim
-    % * Return the result of the validation and update the line claim flag
-    {reply, true, playing, State#state{line=true}};
-playing({bingo, Player}, _From, #state{game_over_duration=GameOver}=State) ->
-    % TODO
-    % * Get the card for that player and the list of generated numbers
-    % * Use the bingo module to validate the claim
-    % If the claim is valid, annonce the winner and transition to game_over
-    {reply, true, game_over, State, GameOver * 1000}.
+playing({line, _Player}, _From, #state{line=false} = State) ->
+{reply, false, playing, State};
+
+
+playing({line, Player}, _From, #state{line=true, generated=NumGenerated} = State) ->
+    Card = bingo_registry: get_player_card(Player),
+    PlayerName = bingo_registry:get_player_name(Player),
+    Result = bingo:validate_line(Card, NumGenerated),
+    case Result of
+        true -> 
+            bingo_registry:broadcast(notification, io_lib:format("~s ha cantado LINEA VALIDA!!", [PlayerName])),
+            {reply, Result, playing, State#state{line=false}};
+        false ->
+            bingo_registry:broadcast(notification, io_lib:format("~w ha cantado linea invalida", [PlayerName])),
+            {reply, Result, playing, State#state{line=true}}
+     end;
+  
+playing({bingo, Player}, _From, #state{game_over_duration=GameOverDuration,generated=NumGenerated} = State) ->
+    Card = bingo_registry:get_player_card(Player),
+    PlayerName = bingo_registry:get_player_name(Player),
+    case bingo:validate_bingo(NumGenerated, Card) of
+        true -> 
+            bingo_registry:broadcast(notificationBingo, io_lib:format("~w ha cantado BINGO!!!", [PlayerName])),
+            {reply, true, game_over, State, GameOverDuration * 1000};
+        false ->
+            bingo_registry:broadcast(notificationBingo, io_lib:format("~w ha cantado bingo invalido", [PlayerName])),
+            {reply, false, playing, State}
+     end;
+     
+playing(_Msg, _From, State) ->
+    {reply, {error, wait_for_next_game}, State}.
 
 %%% Handling events in all states
 
@@ -143,4 +164,10 @@ code_change(_OldVsn, StateName, State, _Extra) ->
 %%%===================================================================
 %%% Internal functions
 %%%===================================================================
-
+countdown(0) ->
+    ok;
+countdown(N) when N > 0 ->
+    bingo_registry:broadcast(countdown, N),
+    io:format("Tick: ~p~n", [N]),
+    timer:sleep(1000),
+    countdown(N - 1). 
