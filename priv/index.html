@@ -8,6 +8,7 @@
     var connection,
         server = "ws://localhost:8081/bingo",
         sendToServer = function (data) { connection.send(JSON.stringify(data)); },
+        
         greetFromServer = function (data) {
             document.getElementById("header").innerHTML = data;
         },
@@ -20,9 +21,9 @@
         
         lineClaimResultFromServer = function (data) {
         if  (data.content){
-            document.getElementById("header").innerHTML = '¡Enhorabuena! LÍNEA VÁLIDA';
+            document.getElementById("header").innerHTML = '¡Enhorabuena! LINEA VALIDA';
             }else{
-                document.getElementById("header").innerHTML = 'Linea inválida';
+                document.getElementById("header").innerHTML = 'Linea invalida';
             }            
         }
         
@@ -30,7 +31,7 @@
         if  (data.content){
             document.getElementById("header").innerHTML = '¡Enhorabuena! HAS GANADO LA PARTIDA';
             }else{
-                document.getElementById("header").innerHTML = 'Bingo inválido';
+                document.getElementById("header").innerHTML = 'Bingo invalido';
             }            
         }
         

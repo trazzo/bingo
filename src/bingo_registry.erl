@@ -39,9 +39,10 @@ add_observer(Conn, UA) ->
                                      card=undefined}]),
     ok.
 
--spec remove_player(pid()) -> ok.
+-spec remove_player(pid()) -> non_neg_integer().
 remove_player(Conn) ->
-    true = ets:delete(?ETS, Conn).
+    true = ets:delete(?ETS, Conn),
+    length(ets:select(?ETS, [{#player{card='$1', _='_'}, [{'/=', '$1', undefined}], [true]}])). 
 
 -spec add_player(pid(), binary(), bingo:card()) -> non_neg_integer().
 add_player(Conn, DisplayName, Card) ->

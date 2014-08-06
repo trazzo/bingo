@@ -67,8 +67,8 @@ default(min_players) ->
     2;
 default(countdown) ->
     3;
-defaut(time_between_numbers) ->
-    5;
+default(time_between_numbers) ->
+    2;
 default(game_over_duration) ->
     20.
 

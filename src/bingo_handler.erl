@@ -62,6 +62,7 @@ websocket_info({msg, {Type, Value}}, Req, State) -> %%modificamos a tupla {Type,
 
 websocket_terminate(_Reason, _Req, _State) ->
     io:format("Terminating connection~n"),
+    bingo_controller:unregister_player(self()),
     bingo_registry:remove_player(self()) .
 
 

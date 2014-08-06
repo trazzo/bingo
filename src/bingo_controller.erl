@@ -3,7 +3,7 @@
 -behaviour(gen_fsm).
 
 %% API
--export([start_link/0, register_player/2, claim/2]).
+-export([start_link/0, register_player/2, unregister_player/1, claim/2]).
 
 %% gen_fsm callbacks
 -export([init/1,
@@ -50,6 +50,13 @@ start_link() ->
 %% @end
 register_player(Connection, PlayerId) ->
     gen_fsm:sync_send_event(?MODULE, {register, Connection, PlayerId}).
+    
+%% @doc Unregisters a player from bingo game
+-spec unregister_player(connection()) ->
+    ok.
+%% @end
+unregister_player(Connection) ->
+    gen_fsm:send_all_state_event(?MODULE, {unregister, Connection}).
 
 %% @doc Claim a line or a bingo when the game has started
 -spec claim(line | bingo, connection()) -> true | false.
@@ -83,13 +90,15 @@ playing(generate_number, #state{generated = Generated, time_between_numbers = Ti
     Bnumber = bingo:generate_number(99, []),
     NewState = State#state{generated=[Bnumber|Generated]},
     bingo_registry:broadcast(bnumber, Bnumber),
-    timer:apply_after(TimebetweenNumbers * 1000, gen_fsm, send_event, [?MODULE, generate_number]),           
-    {next_state, playing, NewState};   
+    timer:apply_after(TimeBetweenNumbers * 1000, gen_fsm, send_event, [?MODULE, generate_number]),       
+    {next_state, playing, NewState};  
+     
 playing(_Event, State) ->
     {next_state, playing, State}.
 
 game_over(timeout, State) ->
     {next_state, waiting_for_players, State#state{line=false, generated=[]}};
+    
 game_over(_Event, State) ->
     {next_state, game_over, State}.
 
@@ -109,6 +118,9 @@ countdown({register, Conn, PlayerId}, _From, State) ->
     Card = bingo:generate_card(),
     bingo_registry:add_player(Conn, PlayerId, Card),
     {reply, {ok, Card}, countdown, State}.
+    
+
+    
 
 playing({line, _Player}, _From, #state{line=false} = State) ->
 {reply, false, playing, State};
@@ -120,10 +132,10 @@ playing({line, Player}, _From, #state{line=true, generated=NumGenerated} = State
     Result = bingo:validate_line(Card, NumGenerated),
     case Result of
         true -> 
-            bingo_registry:broadcast(notification, io_lib:format("~s ha cantado LINEA VALIDA!!", [PlayerName])),
+            bingo_registry:broadcast(notification, io_lib:format("~p ha cantado LINEA VALIDA!!", [PlayerName])),
             {reply, Result, playing, State#state{line=false}};
         false ->
-            bingo_registry:broadcast(notification, io_lib:format("~w ha cantado linea invalida", [PlayerName])),
+            bingo_registry:broadcast(notification, io_lib:format("~p ha cantado linea invalida", [PlayerName])),
             {reply, Result, playing, State#state{line=true}}
      end;
   
@@ -132,17 +144,34 @@ playing({bingo, Player}, _From, #state{game_over_duration=GameOverDuration,gener
     PlayerName = bingo_registry:get_player_name(Player),
     case bingo:validate_bingo(NumGenerated, Card) of
         true -> 
-            bingo_registry:broadcast(notificationBingo, io_lib:format("~w ha cantado BINGO!!!", [PlayerName])),
+            bingo_registry:broadcast(notification, io_lib:format("~p ha cantado BINGO!!!", [PlayerName])),
             {reply, true, game_over, State, GameOverDuration * 1000};
         false ->
-            bingo_registry:broadcast(notificationBingo, io_lib:format("~w ha cantado bingo invalido", [PlayerName])),
+            bingo_registry:broadcast(notification, io_lib:format("~p ha cantado bingo invalido", [PlayerName])),
             {reply, false, playing, State}
      end;
      
 playing(_Msg, _From, State) ->
     {reply, {error, wait_for_next_game}, State}.
+    
+
 
 %%% Handling events in all states
+
+handle_event({unregister, Conn}, StateName, #state{min_players = MinPlayers} = State) ->
+    NumPlayers = bingo_registry:remove_player(Conn),
+    if StateName==playing 
+        andalso NumPlayers < (MinPlayers div 2) -> 
+            {noreply, gameover, State};
+       StateName==playing 
+        andalso NumPlayers < MinPlayers -> 
+            bingo_registry:broadcast(notification, "Amount of players dropped too low. Restarting..."),
+            {noreply, waiting_for_players, State};
+       true ->
+           bingo_registry:broadcast(notification, "Amount of players dropped too low. Restarting..."),
+           {noreply, StateName, State}
+    end;
+           
 
 handle_event(_Event, StateName, State) ->
     {next_state, StateName, State}.
