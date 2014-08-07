@@ -7,6 +7,7 @@
 
 %% gen_fsm callbacks
 -export([init/1,
+         waiting_for_players/2,
          waiting_for_players/3,
          countdown/2,
          countdown/3,
@@ -70,6 +71,8 @@ claim(Claim, Connection) ->
 
 -spec init([]) -> {ok, waiting_for_players, #state{}}.
 init([]) ->
+    {A, B, C} = os:timestamp(),
+    random:seed(A, B, C),
     MinPlayers = bingo:get_config(min_players),
     Countdown = bingo:get_config(countdown),
     TimeBetweenNumbers = bingo:get_config(time_between_numbers),
@@ -86,8 +89,12 @@ countdown(start_countdown, #state{countdown=Secs}=State) ->
     gen_fsm:send_event(?MODULE, generate_number),
     {next_state, playing, State}.
 
+%%It is needed for the numbers generation in case of player ends the game.
+waiting_for_players(generate_number, State) ->
+    {next_state, waiting_for_players, State}.
+
 playing(generate_number, #state{generated = Generated, time_between_numbers = TimeBetweenNumbers}=State) ->
-    Bnumber = bingo:generate_number(99, []),
+    Bnumber = bingo:generate_number(99, Generated),
     NewState = State#state{generated=[Bnumber|Generated]},
     bingo_registry:broadcast(bnumber, Bnumber),
     timer:apply_after(TimeBetweenNumbers * 1000, gen_fsm, send_event, [?MODULE, generate_number]),       
@@ -117,6 +124,7 @@ waiting_for_players({register, Conn, PlayerId}, _From, #state{min_players=Min}=S
 countdown({register, Conn, PlayerId}, _From, State) ->
     Card = bingo:generate_card(),
     bingo_registry:add_player(Conn, PlayerId, Card),
+    bingo_registry:broadcast(notification, <<"Player registered...">>),
     {reply, {ok, Card}, countdown, State}.
     
 
@@ -165,11 +173,11 @@ handle_event({unregister, Conn}, StateName, #state{min_players = MinPlayers} = S
             {noreply, gameover, State};
        StateName==playing 
         andalso NumPlayers < MinPlayers -> 
-            bingo_registry:broadcast(notification, "Amount of players dropped too low. Restarting..."),
-            {noreply, waiting_for_players, State};
+            bingo_registry:broadcast(notification, <<"Amount of players dropped too low. Restarting...">>),
+            {next_state, waiting_for_players, State};
        true ->
-           bingo_registry:broadcast(notification, "Amount of players dropped too low. Restarting..."),
-           {noreply, StateName, State}
+           bingo_registry:broadcast(notification, <<"Amount of players dropped too low. Restarting...">>),
+           {next_state, StateName, State}
     end;
            
 

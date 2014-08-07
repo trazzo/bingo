@@ -64,6 +64,7 @@ get_player_name(Conn) ->
 -spec broadcast(Type::atom(), Value::atom()) -> ok.
 broadcast(Type, Value) ->
     Pids = ets:select(?ETS,[{#player{connection='$1', _='_'}, [], ['$1']}]),
+    io:format("--> Pids=~p~n", [Pids]),
     [Pid ! {msg, {Type, Value}} || Pid <- Pids]. 
 
 
