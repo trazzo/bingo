@@ -25,7 +25,7 @@
         }
         
         lineClaimResultFromServer = function (data) {
-        if  (data.content){
+        if  (data){
             document.getElementById("header").innerHTML = '¡Enhorabuena! LINEA VALIDA';
             }else{
                 document.getElementById("header").innerHTML = 'Linea invalida';
@@ -33,7 +33,7 @@
         }
         
         bingoClaimResultFromServer = function (data){
-        if  (data.content){
+        if  (data){
             document.getElementById("header").innerHTML = '¡Enhorabuena! HAS GANADO LA PARTIDA';
             }else{
                 document.getElementById("header").innerHTML = 'Bingo invalido';

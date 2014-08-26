@@ -4,7 +4,8 @@
 
 %% API
 -export([start_link/0, add_observer/2, add_player/3, remove_player/1,
-         broadcast/2, get_player_card/1, get_player_name/1]).
+         broadcast/2, get_player_card/1, get_player_name/1, count_players/0,
+         deal_new_cards/0]).
 
 %% gen_server callbacks
 -export([init/1,
@@ -42,29 +43,47 @@ add_observer(Conn, UA) ->
 -spec remove_player(pid()) -> non_neg_integer().
 remove_player(Conn) ->
     true = ets:delete(?ETS, Conn),
-    length(ets:select(?ETS, [{#player{card='$1', _='_'}, [{'/=', '$1', undefined}], [true]}])). 
+    count_players().
 
 -spec add_player(pid(), binary(), bingo:card()) -> non_neg_integer().
 add_player(Conn, DisplayName, Card) ->
     true = ets:update_element(
             ?ETS, Conn, [{#player.card, Card}, {#player.name, DisplayName}]),
-    length(ets:select(?ETS, [{#player{card='$1', _='_'}, [{'/=', '$1', undefined}], [true]}])). %Result of number of true (true when is a player registered)
+    count_players().
 
+-spec deal_new_cards() -> non_neg_integer().
+deal_new_cards() ->
+    Players = ets:select(
+            ?ETS, [{#player{card='$1', connection='$2', _='_'},
+                    [{'/=', '$1', undefined}], ['$2']}]),
+    ok = lists:foreach(fun (Conn) ->
+                    Card = bingo:generate_card(),
+                    ets:update_element(?ETS, Conn, [{#player.card, Card}]),
+                    Conn ! {msg, {<<"card">>, bingo:card2json(Card)}}
+        end, Players),
+    count_players().
 
 -spec get_player_card(pid()) -> bingo:card().
 get_player_card(Conn) ->
-        [InfoPlayer] = ets:lookup(?ETS,Conn),
-        InfoPlayer#player.card.       
+    [InfoPlayer] = ets:lookup(?ETS,Conn),
+    InfoPlayer#player.card.       
         
--spec get_player_name(pid()) -> binary().
+-spec get_player_name(pid()) -> binary() | undefined.
 get_player_name(Conn) ->
-        [InfoPlayer] = ets:lookup(?ETS,Conn),
-        InfoPlayer#player.name.       
+    case ets:lookup(?ETS,Conn) of
+        [InfoPlayer] -> InfoPlayer#player.name;
+        [] -> undefined
+    end.
+
+-spec count_players() -> non_neg_integer().
+count_players() ->
+    %Result of number of true (true when is a player registered)
+    length(ets:select(?ETS, [{#player{card='$1', _='_'},
+                             [{'/=', '$1', undefined}], [true]}])).
 
 -spec broadcast(Type::atom(), Value::atom()) -> ok.
 broadcast(Type, Value) ->
     Pids = ets:select(?ETS,[{#player{connection='$1', _='_'}, [], ['$1']}]),
-    io:format("--> Pids=~p~n", [Pids]),
     [Pid ! {msg, {Type, Value}} || Pid <- Pids]. 
 
 

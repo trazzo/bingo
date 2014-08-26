@@ -16,15 +16,16 @@
 
 %% @doc Generates a new random number for the game.
 %% The generated number hasn't been generated earlier in this game.
--spec generate_number(pos_integer, [bnumber()]) -> bnumber().
+-spec generate_number(pos_integer, [bnumber()])
+    -> bnumber() | no_numbers_available.
 %% @end
 generate_number(Limit, Generated) ->
-   N = random:uniform(Limit),
-    case lists:member(N, Generated) of
-         true -> 
-             generate_number(Limit,Generated);
-         false -> 
-             N
+    All = lists:seq(1, Limit),
+    case All -- Generated of
+        [] -> no_numbers_available;
+        Available when is_list(Available) ->
+            N = random:uniform(length(Available)),
+            lists:nth(N, Available)
     end.
 
 %% @doc Generates a random bingo card
@@ -68,9 +69,9 @@ default(min_players) ->
 default(countdown) ->
     3;
 default(time_between_numbers) ->
-    2;
+    1;
 default(game_over_duration) ->
-    20.
+    4.
 
 -spec card2json(card()) -> iolist().
 card2json(Card) ->
@@ -136,9 +137,3 @@ delete_zero(List) ->
 all_in(L, Generated) ->
     lists:all(fun(N) -> lists:member(N, Generated) end, L).
 
-
-    
-                   
-
-
-%%commit

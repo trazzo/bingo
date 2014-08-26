@@ -31,24 +31,38 @@ websocket_init(tcp, Req, _) ->
     {ok, Req3, undefined, hibernate}.
 
 websocket_handle({text, Json}, Req, State) ->
-    io:format("Received from client: ~p~n", [Json]),
-    Data = jiffy:decode(Json),
-    io:format("Received from client: ~p~n", [Data]),
-	{ok, Req, State}.
+    {Data} = jiffy:decode(Json),
+    case proplists:get_value(<<"type">>, Data) of
+        <<"bingoClaim">> ->
+            Result = bingo_controller:claim(bingo, self()),
+            Res = jiffy:encode({[{type, <<"bingoClaimResult">>}, {content, Result}]}),
+            {reply, {text, Res}, Req, State};
+            
+        <<"lineClaim">> ->
+            Result = bingo_controller:claim(line, self()),
+            Res = jiffy:encode({[{type, <<"lineClaimResult">>}, {content, Result}]}),
+            {reply, {text, Res}, Req, State};
+            
+        <<"register">> ->
+            DisplayName = proplists:get_value(<<"content">>, Data),
+            case bingo_controller:register_player(self(), DisplayName) of
+                {ok, Card} -> 
+                    Res = jiffy:encode({[{type, <<"card">>}, {content, bingo:card2json(Card)}]}),
+                    {reply, {text, Res}, Req, State}; %%text ponse por cowboy para poder Res
+                {error, wait_for_next_game} -> 
+                    {ok, Req, State}
+            end
+    end.
 
-websocket_info(Msg, Req, State) ->
-    Json = jiffy:encode(Msg),
+websocket_info({msg, {Type, Value}}, Req, State) ->
+    Json = jiffy:encode({[{type, Type}, {content, Value}]}),
     {reply, {text, Json}, Req, State}.
 
 websocket_terminate(_Reason, _Req, _State) ->
-    io:format("Terminating connection~n"),
-    bingo_registry:remove_player(self()) .
-
+    Conn = self(),
+    bingo_controller:unregister_player(Conn).
 
 %%====================================================================
 %% Internal Functions
 %%====================================================================
-%%commit 
 
-
-%%commit
