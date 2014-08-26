@@ -91,13 +91,16 @@ countdown(start_countdown, #state{countdown=Secs}=State) ->
             io_lib:format("Cuenta atras para la partida!", []))),
     gen_fsm:send_event(?MODULE, {count, Secs}),
     {next_state, countdown, State};
+    
 countdown({count, N}, State) when N>0->
     bingo_registry:broadcast(countdown, N),
     timer:apply_after(1000, gen_fsm, send_event, [?MODULE, {count, N-1}]),
     {next_state, countdown, State};
+    
 countdown({count, 0}, State) ->
     gen_fsm:send_event(?MODULE, generate_number),
     {next_state, playing, State};
+    
 countdown(_, State) ->
     {next_state, countdown, State}.
 
@@ -118,6 +121,7 @@ playing(generate_number, #state{generated = Generated,
             timer:apply_after(TimeBetweenNumbers * 1000, gen_fsm, send_event, [?MODULE, generate_number]),
             {next_state, playing, NewState}
     end;
+    
 playing(_, State) ->
     {next_state, playing, State}.
 

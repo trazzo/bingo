@@ -67,11 +67,11 @@ get_config(Key) ->
 default(min_players) ->
     2;
 default(countdown) ->
-    3;
+    5;
 default(time_between_numbers) ->
-    1;
+    5;
 default(game_over_duration) ->
-    4.
+    10.
 
 -spec card2json(card()) -> iolist().
 card2json(Card) ->

@@ -7,8 +7,9 @@
     
     var connection,
         server = "ws://localhost:8081/bingo",
-        sendToServer = function (data) { connection.send(JSON.stringify(data)); },
-        
+        sendToServer = function (data) {
+            connection.send(JSON.stringify(data));
+        },
         greetFromServer = function (data) {
             document.getElementById("header").innerHTML = data;
         },
@@ -17,35 +18,28 @@
         },
         notificationFromServer = function (data) {
             console.log(data);
-            document.getElementById("log").innerHTML = data;
+            document.getElementById("log").innerHTML += "<p>" + data + "</p>";
         },
         countdownFromServer = function (data) {
-        
-       
-        }
-        
+            console.log(data);
+            document.getElementById("log").innerHTML += "<p>" + data + "</p>";
+        },
         lineClaimResultFromServer = function (data) {
-        if  (data){
-            document.getElementById("header").innerHTML = '¡Enhorabuena! LINEA VALIDA';
-            }else{
-                document.getElementById("header").innerHTML = 'Linea invalida';
+            var header = document.getElementById("header");
+            if  (data.content){
+                header.innerHTML = '¡Enhorabuena! LINEA VALIDA';
+            } else{
+                header.innerHTML = 'Linea invalida';
             }            
-        }
-        
+        },
         bingoClaimResultFromServer = function (data){
-        if  (data){
-            document.getElementById("header").innerHTML = '¡Enhorabuena! HAS GANADO LA PARTIDA';
+            var header = document.getElementById("header");
+            if  (data.content){
+                header.innerHTML = '¡Enhorabuena! HAS GANADO LA PARTIDA';
             }else{
-                document.getElementById("header").innerHTML = 'Bingo invalido';
+                header.innerHTML = 'Bingo invalido';
             }            
-        }
-        
-        
-        
-        
-        
-        
-        
+        },
         cardToArray = function(data){ 
            var  rows = [data.row1, data.row2, data.row3],
                 xRows = [];
@@ -88,15 +82,12 @@
             connection.send(JSON.stringify({type: "register", content: name}));
         };
         
-        
     connection = new WebSocket(server + '/connect');
-
     // Log errors
     connection.onerror = function (error) {
         console.log('WebSocket Error ', error);
     };
-
-    // Log messages from the server
+    // Run callbacks for server messages
     connection.onmessage = function (e) {
         var message = JSON.parse(e.data);
         eval(message.type + 'FromServer').apply(this, [message.content]); 
