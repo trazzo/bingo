@@ -206,7 +206,7 @@ playing({bingo, Player}, _From, #state{generated=NumGenerated,
      end;
 
 playing(_Msg, _From, State) ->
-    {reply, {error, wait_for_next_game}, State}.
+    {reply, {error, wait_for_next_game}, playing, State}.
 
 %%% Handling events in all states
 

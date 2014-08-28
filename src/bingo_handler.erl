@@ -50,7 +50,10 @@ websocket_handle({text, Json}, Req, State) ->
                     Res = jiffy:encode({[{type, <<"card">>}, {content, bingo:card2json(Card)}]}),
                     {reply, {text, Res}, Req, State}; %%text ponse por cowboy para poder Res
                 {error, wait_for_next_game} -> 
-                    {ok, Req, State}
+                    Msg = list_to_binary(io_lib:format(
+                        "Error: registro inhabilitado hasta el final de la partida~n", [])),
+                    Res = jiffy:encode({[{type, <<"notification">>}, {content, Msg}]}),
+                    {reply, {text, Res}, Req, State}
             end
     end.
 
