@@ -65,7 +65,7 @@ get_config(Key) ->
     end.
     
 default(min_players) ->
-    2;
+    5;
 default(countdown) ->
     3;
 default(time_between_numbers) ->

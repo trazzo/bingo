@@ -224,7 +224,7 @@ handle_event({unregister, Conn}, StateName,
     if StateName==playing
         andalso NumPlayers < (MinPlayers div 2) ->
             bingo_registry:broadcast(notification, list_to_binary(
-                io_lib:format("Numero de jugadores demasiado bajo.'~w'"
+                io_lib:format("Numero de jugadores demasiado bajo.'~p'"
                                 "Fin del juego.", [NumPlayers]))),
             timer:apply_after(GameOverDuration * 1000,
                               gen_fsm, send_event, [?MODULE, restart_game]),
@@ -233,8 +233,8 @@ handle_event({unregister, Conn}, StateName,
         andalso NumPlayers < MinPlayers ->
             bingo_registry:broadcast( 
                 notification, list_to_binary(
-                    io_lib:format("Numero de jugadores demasiado bajo.'~w'"
-                                "Esperando a que se unan mas...",[NumPlayers]))),
+                    io_lib:format("Numero de jugadores demasiado bajo.'~p'"
+                                "Esperando a que se unan mas...", [NumPlayers]))),
                 {next_state, waiting_for_players, State};
        true ->
            {next_state, StateName, State}
