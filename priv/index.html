@@ -10,34 +10,38 @@
         sendToServer = function (data) {
             connection.send(JSON.stringify(data));
         },
-        greetFromServer = function (data) {
-            document.getElementById("header").innerHTML = data;
-        },
         bnumberFromServer = function (data) {
             document.getElementById("number").innerHTML = data;
+        },
+        scrollDown = function (){
+            var objDiv = document.getElementById("log");
+            document.getElementById("log").scrollTop = document.getElementById("log").scrollHeight;
         },
         notificationFromServer = function (data) {
             console.log(data);
             document.getElementById("log").innerHTML += "<p>" + data + "</p>";
+            scrollDown();
         },
         countdownFromServer = function (data) {
             console.log(data);
             document.getElementById("log").innerHTML += "<p>" + data + "</p>";
+            scrollDown();
         },
         lineClaimResultFromServer = function (data) {
             var header = document.getElementById("header");
-            if  (data.content){
-                header.innerHTML = '¡Enhorabuena! LINEA VALIDA';
+            if  (data){
+                header.innerHTML = 'LINEA VALIDA!';
             } else{
-                header.innerHTML = 'Linea invalida';
+                header.innerHTML = 'Has cantado una linea invalida';
+                
             }            
         },
         bingoClaimResultFromServer = function (data){
             var header = document.getElementById("header");
-            if  (data.content){
-                header.innerHTML = '¡Enhorabuena! HAS GANADO LA PARTIDA';
+            if  (data){
+                header.innerHTML = '¡ENHORABUENA! HAS GANADO LA PARTIDA';
             }else{
-                header.innerHTML = 'Bingo invalido';
+                header.innerHTML = 'Has cantando un bingo invalido';
             }            
         },
         cardToArray = function(data){ 
@@ -71,15 +75,35 @@
                } 
                return(newData);   
         },
+        selectNumber = function(obj){
+            if (obj.innerHTML === "X"){
+             obj.innerHTML = "X";
+            }else{
+            obj.innerHTML ="!"
+            }
+        },
         claimBingo = function(){
             connection.send(JSON.stringify({type: "bingoClaim"}));
         },
         claimLine = function(){
-            connection.send(JSON.stringify({type: "lineClaim"})); //convertimos a JSON PARA ENVIAR A ERLANG
+            connection.send(JSON.stringify({type: "lineClaim"})); //JSON to send to server 
+        },
+        validateName = function (playerName) {
+           playerName = document.getElementById("textbox").value;
+                if (playerName == null || playerName == "") {
+                    alert("Introduce un nombre de registro");
+                return false;
+                }else{
+                    return true;
+                }
         },
         regName = function(){
             var name = document.getElementById("textbox").value;
-            connection.send(JSON.stringify({type: "register", content: name}));
+            if (validateName(name)){
+                connection.send(JSON.stringify({type: "register", content: name}));
+                }else{
+                    document.getElementById('textbox').focus();
+                }
         };
         
     connection = new WebSocket(server + '/connect');
@@ -101,7 +125,7 @@
   <body>
     <div id="global">
         <div id="header">
-            <p>MENSAJE</p>
+            <p></p>
         </div>
         <div id="right">
             <div id="display"><p id="number"></p></div>
@@ -113,14 +137,27 @@
             </div>
         </div>        
         <div id="left">
-            <div id="log">LOG</div>
+            <div id="log">        
+            </div>
             <div id="card">
                 <table id="cardTable">  
-                    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr> 
-                    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr> 
-                    <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>    
+                    <tr><td onclick="selectNumber(this)"></td><td onclick="selectNumber(this)"></td><td onclick="selectNumber(this)">
+                    </td><td onclick="selectNumber(this)"></td><td onclick="selectNumber(this)"></td><td onclick="selectNumber(this)">
+                    </td><td onclick="selectNumber(this)"></td><td onclick="selectNumber(this)"></td><td onclick="selectNumber(this)"></td></tr> 
+                    
+                    <tr><td onclick="selectNumber(this)"></td><td onclick="selectNumber(this)"></td><td onclick="selectNumber(this)">
+                    </td><td onclick="selectNumber(this)"></td><td onclick="selectNumber(this)"></td><td onclick="selectNumber(this)">
+                    </td><td onclick="selectNumber(this)"></td><td onclick="selectNumber(this)"></td><td onclick="selectNumber(this)"></td></tr> 
+                    
+                    <tr><td onclick="selectNumber(this)"></td><td onclick="selectNumber(this)"></td><td onclick="selectNumber(this)">
+                    </td><td onclick="selectNumber(this)"></td><td onclick="selectNumber(this)"></td><td onclick="selectNumber(this)">
+                    </td><td onclick="selectNumber(this)"></td><td onclick="selectNumber(this)"></td><td onclick="selectNumber(this)"></td></tr> 
                 </table>
             </div>
         </div>   
     </div>
   </body>
+  
+  
+
+  

@@ -67,9 +67,9 @@ get_config(Key) ->
 default(min_players) ->
     2;
 default(countdown) ->
-    5;
+    3;
 default(time_between_numbers) ->
-    5;
+    2;
 default(game_over_duration) ->
     10.
 
